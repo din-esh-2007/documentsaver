@@ -1,0 +1,7 @@
+﻿node_modules/
+uploads/
+.env
+.DS_Store
+npm-debug.log
+logs/
+.vscode/

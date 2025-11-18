@@ -1,0 +1,171 @@
+﻿<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Regs Insight — Upload</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="body-wrap">
+    <div class="bg-blob b1"></div>
+    <div class="bg-blob b2"></div>
+
+    <div class="card">
+<div class="header">
+  <div style="display:flex; align-items:center; gap:14px;">
+    <div class="brand">Regs Insight</div>
+  </div>
+  <div id="authControls" style="display:flex; gap:10px; align-items:center;">
+    <a id="signinLink" href="index.html" style="color:var(--text-dark); text-decoration:underline; font-weight:600;">Sign In</a>
+    <a id="signupLink" href="signup.html" style="color:var(--text-dark); text-decoration:underline; font-weight:600;">Sign Up</a>
+    <span id="userEmail" style="display:none; color:var(--brand-color); font-weight:700"></span>
+    <button id="logoutBtn" style="display:none; padding:8px 12px; border-radius:8px; border:1px solid rgba(0,0,0,0.06); background:transparent; cursor:pointer;">Logout</button>
+  </div>
+</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div class="brand">Regs Insight</div>
+        </div>
+        <div>
+          <button id="backBtn" class="btn btn-ghost">Back</button>
+        </div>
+      </div>
+
+      <h1>Upload Document</h1>
+      <p class="sub">Add document name, type and date. You must be signed in.</p>
+
+      <div id="formArea">
+        <div class="form-row">
+          <label for="document_name">Document Name</label>
+          <input id="document_name" type="text" placeholder="Enter document name" />
+        </div>
+
+        <div class="form-row">
+          <label for="document_type">Document Type</label>
+          <input id="document_type" type="text" placeholder="Regulation / Policy / Scheme" />
+        </div>
+
+        <div class="form-row">
+          <label for="document_date">Document Date</label>
+          <input id="document_date" type="date" />
+        </div>
+
+        <div class="form-row">
+          <label for="file">File</label>
+          <input id="file" type="file" class="file-input" />
+        </div>
+
+        <div style="margin-top:14px; display:flex; gap:10px;">
+          <button id="uploadBtn" class="btn btn-primary">Upload</button>
+          <button id="logoutBtn" class="btn btn-ghost">Logout</button>
+        </div>
+
+        <p id="status" style="color:#064e3b; margin-top:10px"></p>
+      </div>
+
+      <section style="margin-top:18px;">
+        <h3>Your uploads</h3>
+        <ul id="myList" class="results-list"></ul>
+      </section>
+
+      <p class="footer">Regs Insight — Department of Higher Education</p>
+    </div>
+
+  <script>
+const apiBase = "";
+
+// navigation back to home
+document.getElementById("backBtn").addEventListener("click", ()=>{ window.location.href = "index.html"; });
+
+function getToken(){ return localStorage.getItem("token"); }
+function logout(){ localStorage.removeItem("token"); localStorage.removeItem("userEmail"); window.location.href="/"; }
+
+async function loadMyDocs(){
+  const t = getToken();
+  const ul = document.getElementById("myList");
+  ul.innerHTML = "";
+  if(!t) { ul.innerHTML = "<div style=\'color:var(--muted)\'>Sign in to see uploads</div>"; return; }
+  const res = await fetch(apiBase + "/api/mydocs", { headers: { Authorization: "Bearer "+t }});
+  if(!res.ok) return;
+  const arr = await res.json();
+  arr.forEach(d=>{
+    const fname = (d.file_path||"").split(/[\\/]/).pop();
+    const url = "/uploads/" + encodeURIComponent(fname);
+    const li = document.createElement("li");
+    li.className = "result-item";
+    li.innerHTML = "<div><strong>"+(d.document_name||d.original_filename)+"</strong><div style=\'color:var(--muted)\'>"+(d.document_type||"")+" • "+(d.document_date||"")+"</div></div><div><a href=\'"+url+"\' target=\'_blank\'>view</a> <button data-id=\'"+d.id+"\' class=\'btn btn-ghost deleteBtn\'>Delete</button></div>";
+    ul.appendChild(li);
+  });
+}
+
+// Delete document handler
+document.addEventListener("click", async (e)=>{
+  if(e.target && e.target.classList.contains("deleteBtn")){
+    const id = e.target.getAttribute("data-id");
+    if(!confirm("Delete this document? This cannot be undone.")) return;
+    const t = getToken();
+    try{
+      const res = await fetch(apiBase + "/api/documents/" + id, { method: "DELETE", headers: { Authorization: "Bearer " + t }});
+      const j = await res.json();
+      if(res.ok){ alert("Deleted"); loadMyDocs(); } else { alert(j.error || "Delete failed"); }
+    }catch(err){ alert("Network error"); }
+  }
+});
+
+document.getElementById("uploadBtn").addEventListener("click", async ()=>{
+  const f = document.getElementById("file");
+  if(!f.files.length){ alert("Pick a file"); return; }
+  const form = new FormData();
+  form.append("file", f.files[0]);
+  form.append("document_name", document.getElementById("document_name").value);
+  form.append("document_type", document.getElementById("document_type").value);
+  form.append("document_date", document.getElementById("document_date").value);
+  const t = getToken();
+  const res = await fetch(apiBase + "/api/upload", { method:"POST", headers: { Authorization: "Bearer " + t }, body: form });
+  const j = await res.json();
+  if(res.ok){ document.getElementById("status").innerText = "Uploaded ✓"; loadMyDocs(); } else { document.getElementById("status").innerText = j.error || "Upload failed"; }
+});
+
+document.getElementById("logoutBtn")?.addEventListener("click", logout);
+
+loadMyDocs();
+  </script>
+  </div>
+</body>
+</html>
+
+
+<script>
+(function(){
+  function applyAuthUI(){
+    try {
+      const token = localStorage.getItem("token");
+      const email = localStorage.getItem("userEmail") || "";
+      const signin = document.getElementById("signinLink");
+      const signup = document.getElementById("signupLink");
+      const userEmail = document.getElementById("userEmail");
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      if(!signin || !signup || !userEmail || !logoutBtn) return;
+
+      if(token){
+        signin.style.display = "none";
+        signup.style.display = "none";
+        userEmail.style.display = "inline-block";
+        userEmail.innerText = email || "User";
+        logoutBtn.style.display = "inline-block";
+        logoutBtn.onclick = function(){ localStorage.removeItem("token"); localStorage.removeItem("userEmail"); window.location.href = "index.html"; };
+      } else {
+        signin.style.display = "inline-block";
+        signup.style.display = "inline-block";
+        userEmail.style.display = "none";
+        logoutBtn.style.display = "none";
+      }
+    } catch(e){ console.warn("auth UI error", e); }
+  }
+  document.addEventListener("DOMContentLoaded", applyAuthUI);
+  // also run periodically in case localStorage changes in other tab
+  setInterval(applyAuthUI, 1500);
+})();
+</script>

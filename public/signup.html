@@ -1,0 +1,83 @@
+﻿<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Regs Insight — Create Account</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="body-wrap">
+    <div class="bg-blob b1"></div>
+    <div class="bg-blob b2"></div>
+    <div class="bg-blob b3"></div>
+
+    <div class="card" role="main" aria-labelledby="signupTitle" style="max-width:980px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div class="brand">Regs Insight</div>
+      </div>
+
+      <h1 id="signupTitle">Create Account</h1>
+      <p class="small">Fill the details to create a new account. After sign up you will be redirected to the Upload page.</p>
+
+      <div style="margin-top:14px;">
+        <div style="background:rgba(255,255,255,0.92); padding:18px; border-radius:12px; box-shadow:0 10px 30px rgba(2,6,23,0.06);">
+          <h2 style="margin:0 0 8px 0; color:#071133">Create Account</h2>
+          <div class="muted">Quick sign up for new users</div>
+
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <input id="name" class="small-input" type="text" placeholder="Full name" style="flex:1"/>
+            <input id="signupEmail" class="small-input" type="email" placeholder="Email" style="flex:1"/>
+          </div>
+
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <input id="signupPassword" class="small-input" type="password" placeholder="Password" style="flex:1"/>
+            <input id="signupConfirm" class="small-input" type="password" placeholder="Confirm password" style="flex:1"/>
+          </div>
+
+          <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+            <button id="signupBtn" class="primarybtn">Create account</button>
+            <button id="backToLogin" class="linkbtn">Back to Sign In</button>
+          </div>
+
+          <p id="signupMsg" style="color:#b91c1c; margin-top:8px"></p>
+        </div>
+      </div>
+
+      <p class="footer" style="margin-top:18px;">Regs Insight — Department of Higher Education</p>
+    </div>
+
+    <div id="toast" class="toast"></div>
+  </div>
+
+<script>
+const apiBase = "";
+const toast = document.getElementById('toast');
+function showToast(msg,t=3000){ toast.innerText = msg; toast.style.display='block'; setTimeout(()=>toast.style.display='none', t); }
+function setLoggedIn(email, token){ localStorage.setItem('token', token); localStorage.setItem('userEmail', email); window.location.href = 'upload.html'; }
+
+document.getElementById('backToLogin').addEventListener('click', ()=> { window.location.href = 'index.html'; });
+
+document.getElementById('signupBtn').addEventListener('click', async ()=>{
+  signupMsg.innerText = '';
+  const full = (document.getElementById('name').value||'').trim();
+  const email = (document.getElementById('signupEmail').value||'').trim();
+  const pw = document.getElementById('signupPassword').value;
+  const pw2 = document.getElementById('signupConfirm').value;
+  if(!email || !pw){ signupMsg.innerText = 'Email and password required'; return; }
+  if(pw !== pw2){ signupMsg.innerText = 'Passwords do not match'; return; }
+  try{
+    const res = await fetch(apiBase + '/api/signup', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name: full, email: email, password: pw })
+    });
+    const j = await res.json();
+    if(res.ok){ setLoggedIn(j.email || email, j.token); } else { signupMsg.innerText = j.error || 'Sign up failed'; }
+  } catch(e){
+    signupMsg.innerText = 'Network error';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+﻿<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Regs Insight — Search</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="body-wrap">
+    <div class="bg-blob b1"></div>
+    <div class="bg-blob b2"></div>
+
+    <div class="card">
+<div class="header">
+  <div style="display:flex; align-items:center; gap:14px;">
+    <div class="brand">Regs Insight</div>
+  </div>
+  <div id="authControls" style="display:flex; gap:10px; align-items:center;">
+    <a id="signinLink" href="index.html" style="color:var(--text-dark); text-decoration:underline; font-weight:600;">Sign In</a>
+    <a id="signupLink" href="signup.html" style="color:var(--text-dark); text-decoration:underline; font-weight:600;">Sign Up</a>
+    <span id="userEmail" style="display:none; color:var(--brand-color); font-weight:700"></span>
+    <button id="logoutBtn" style="display:none; padding:8px 12px; border-radius:8px; border:1px solid rgba(0,0,0,0.06); background:transparent; cursor:pointer;">Logout</button>
+  </div>
+</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div class="brand">Regs Insight</div>
+        </div>
+        <div>
+          <button id="backBtn" class="btn btn-ghost">Back</button>
+        </div>
+      </div>
+
+      <h1>Search Documents</h1>
+      <p class="sub">Search by name or filename. Filter by Type or Date.</p>
+
+      <div style="display:flex; gap:10px; margin-top:12px; align-items:center;">
+        <input id="q" placeholder="Search name or filename..." style="flex:2; padding:12px; border-radius:10px; border:1px solid #eef3ff;" />
+        <input id="type" placeholder="Type (exact)" style="flex:1; padding:12px; border-radius:10px; border:1px solid #eef3ff;" />
+        <input id="date" type="date" style="width:170px; padding:12px; border-radius:10px; border:1px solid #eef3ff;" />
+        <button id="searchBtn" class="btn btn-primary">Search</button>
+      </div>
+
+      <section style="margin-top:16px;">
+        <h3>Results</h3>
+        <ul id="results" class="results-list"></ul>
+      </section>
+
+      <p class="footer">Regs Insight — Department of Higher Education</p>
+    </div>
+  </div>
+
+<script>
+const apiBase = "";
+document.getElementById("backBtn").addEventListener("click", ()=>{ window.location.href = "index.html"; });
+
+document.getElementById("searchBtn").addEventListener("click", async ()=>{
+  const q = document.getElementById("q").value;
+  const type = document.getElementById("type").value;
+  const date = document.getElementById("date").value;
+  const params = new URLSearchParams();
+  if(q) params.append("q", q);
+  if(type) params.append("type", type);
+  if(date) params.append("date", date);
+  const res = await fetch(apiBase + "/api/search?" + params.toString());
+  const arr = await res.json();
+  const ul = document.getElementById("results");
+  ul.innerHTML = "";
+  if(!arr || arr.length===0){ ul.innerHTML = "<div style=\'color:var(--muted)\'>No results</div>"; return; }
+  arr.forEach(d=>{
+    const fname = (d.file_path||"").split(/[\\/]/).pop();
+    const url = "/uploads/" + encodeURIComponent(fname);
+    const li = document.createElement("li");
+    li.className = "result-item";
+    li.innerHTML = "<div><strong>"+d.document_name+"</strong><div style=\'color:var(--muted)\'>"+(d.document_type||"")+" • "+(d.document_date||"")+"</div></div><div><a href=\'"+url+"\' target=\'_blank\'>view</a></div>";
+    ul.appendChild(li);
+  });
+});
+</script>
+
+
+<script>
+(function(){
+  function applyAuthUI(){
+    try {
+      const token = localStorage.getItem("token");
+      const email = localStorage.getItem("userEmail") || "";
+      const signin = document.getElementById("signinLink");
+      const signup = document.getElementById("signupLink");
+      const userEmail = document.getElementById("userEmail");
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      if(!signin || !signup || !userEmail || !logoutBtn) return;
+
+      if(token){
+        signin.style.display = "none";
+        signup.style.display = "none";
+        userEmail.style.display = "inline-block";
+        userEmail.innerText = email || "User";
+        logoutBtn.style.display = "inline-block";
+        logoutBtn.onclick = function(){ localStorage.removeItem("token"); localStorage.removeItem("userEmail"); window.location.href = "index.html"; };
+      } else {
+        signin.style.display = "inline-block";
+        signup.style.display = "inline-block";
+        userEmail.style.display = "none";
+        logoutBtn.style.display = "none";
+      }
+    } catch(e){ console.warn("auth UI error", e); }
+  }
+  document.addEventListener("DOMContentLoaded", applyAuthUI);
+  // also run periodically in case localStorage changes in other tab
+  setInterval(applyAuthUI, 1500);
+})();
+</script>

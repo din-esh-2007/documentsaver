@@ -1,0 +1,308 @@
+﻿<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Regs Insight — SPA</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap");
+    :root{
+      --bg1:#7b2ff7; --bg2:#ff6ec4; --brand:#1F8A70; --muted:#334155; --card-bg: rgba(255,255,255,0.95);
+    }
+    *{box-sizing:border-box}
+    body{ margin:0; min-height:100vh; font-family:"Poppins",sans-serif; background: linear-gradient(135deg,var(--bg1),var(--bg2)); color:#071133;}
+    .container{ max-width:1100px; margin:48px auto; padding:20px; }
+    .card{ background:var(--card-bg); border-radius:14px; padding:28px; box-shadow:0 18px 50px rgba(9,30,66,0.12); }
+    .brand{ font-weight:800; font-size:28px; color:var(--brand); }
+    .header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    .navlinks{ display:flex; gap:12px; align-items:center; }
+    a.link{ color:var(--muted); text-decoration:underline; cursor:pointer; }
+    h1{ font-size:40px; margin:0 0 6px 0; }
+    .sub{ color:var(--muted); margin-bottom:14px; }
+    .btn{ padding:10px 14px; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary{ background: linear-gradient(90deg,#6c63ff,#ff7ab6); color:white; }
+    .btn-ghost{ background:transparent; border:1px solid rgba(15,23,42,0.06); }
+    input, select, textarea{ width:100%; padding:12px; border-radius:10px; border:1px solid #e6eef9; margin-top:8px; }
+    .row{ display:flex; gap:12px; }
+    .col{ flex:1; }
+    .hidden{ display:none; }
+    .results { margin-top:18px; list-style:none; padding:0; display:grid; gap:10px; }
+    .result { background:linear-gradient(180deg,#fff,#fafcff); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid #eef3ff; }
+    .small{ color:var(--muted); }
+    .footer{ text-align:center; margin-top:20px; color:var(--muted); font-weight:600; }
+    .toast{ position:fixed; right:24px; bottom:24px; background:#111; color:#fff; padding:10px 14px; border-radius:8px; display:none; }
+    /* responsive */
+    @media (max-width:820px){ .row{ flex-direction:column } h1{ font-size:28px } .container{ margin:18px } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div style="display:flex;gap:14px;align-items:center;">
+          <div class="brand">Regs Insight</div>
+        </div>
+        <div id="authArea" style="display:flex;gap:10px;align-items:center;">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <!-- VIEWS -->
+      <div id="view-area">
+        <!-- SIGN IN -->
+        <section id="view-signin">
+          <h1>Sign In</h1>
+          <p class="sub">Sign in to access the Department of Higher Education portal.</p>
+          <input id="signinEmail" type="email" placeholder="Email" />
+          <input id="signinPassword" type="password" placeholder="Password" />
+          <div style="margin-top:12px; display:flex; gap:12px;">
+            <button id="signinBtn" class="btn btn-primary">Sign In</button>
+            <button id="gotoSignup" class="btn btn-ghost">Create new account</button>
+          </div>
+          <p id="signinMsg" class="small" style="color:#b91c1c"></p>
+        </section>
+
+        <!-- SIGN UP -->
+        <section id="view-signup" class="hidden">
+          <h1>Create Account</h1>
+          <p class="sub">Fill details to create a new account.</p>
+          <div class="row">
+            <input id="signupName" class="col" type="text" placeholder="Full name" />
+            <input id="signupEmail" class="col" type="email" placeholder="Email" />
+          </div>
+          <div class="row" style="margin-top:8px;">
+            <input id="signupPassword" class="col" type="password" placeholder="Password" />
+            <input id="signupConfirm" class="col" type="password" placeholder="Confirm password" />
+          </div>
+          <div style="margin-top:12px; display:flex; gap:12px;">
+            <button id="signupBtn" class="btn btn-primary">Create account</button>
+            <button id="backToSignIn" class="btn btn-ghost">Back to Sign In</button>
+          </div>
+          <p id="signupMsg" class="small" style="color:#b91c1c"></p>
+        </section>
+
+        <!-- HOME -->
+        <section id="view-home" class="hidden">
+          <h1>Welcome to Regs Insight</h1>
+          <p class="sub">Fast, AI-assisted retrieval of regulations, policies and schemes.</p>
+          <div style="display:flex; gap:12px; margin-top:12px;">
+            <button id="navUpload" class="btn btn-primary">Upload Document</button>
+            <button id="navSearch" class="btn btn-ghost">Search Documents</button>
+          </div>
+        </section>
+
+        <!-- UPLOAD -->
+        <section id="view-upload" class="hidden">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Upload Document</h1>
+            <div>
+              <button id="backFromUpload" class="btn btn-ghost">Back</button>
+            </div>
+          </div>
+          <p class="sub">Add document name, type and date.</p>
+          <div style="margin-top:8px;">
+            <label>Document Name</label>
+            <input id="document_name" type="text" />
+            <label>Document Type</label>
+            <input id="document_type" type="text" placeholder="Regulation / Policy / Scheme" />
+            <label>Document Date</label>
+            <input id="document_date" type="date" />
+            <label>File</label>
+            <input id="file_input" type="file" />
+            <div style="margin-top:12px; display:flex; gap:10px;">
+              <button id="uploadSubmit" class="btn btn-primary">Upload</button>
+              <button id="logoutBtn" class="btn btn-ghost">Logout</button>
+            </div>
+            <p id="uploadStatus" class="small" style="color:#064e3b"></p>
+          </div>
+
+          <h3 style="margin-top:18px;">Your uploads</h3>
+          <ul id="myUploads" class="results"></ul>
+        </section>
+
+        <!-- SEARCH -->
+        <section id="view-search" class="hidden">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Search Documents</h1>
+            <div><button id="backFromSearch" class="btn btn-ghost">Back</button></div>
+          </div>
+          <p class="sub">Search by name or filename. Filter by Type or Date.</p>
+          <div style="display:flex; gap:10px; margin-top:12px;">
+            <input id="q" placeholder="Search name or filename..." style="flex:2" />
+            <input id="type" placeholder="Type (exact)" style="flex:1" />
+            <input id="date" type="date" style="width:170px" />
+            <button id="searchBtn" class="btn btn-primary">Search</button>
+          </div>
+          <h3 style="margin-top:16px;">Results</h3>
+          <ul id="searchResults" class="results"></ul>
+        </section>
+
+      </div>
+
+      <p class="footer">Regs Insight — Department of Higher Education</p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+<script>
+const apiBase = "";
+
+// simple router: show one view at a time
+function show(view){
+  document.querySelectorAll("#view-area section").forEach(s=>s.classList.add("hidden"));
+  document.getElementById("view-"+view).classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+// toast
+function toast(msg, t=2500){ const el = document.getElementById("toast"); el.innerText = msg; el.style.display="block"; setTimeout(()=>el.style.display="none", t); }
+
+// auth UI
+function renderAuthArea(){
+  const auth = document.getElementById("authArea");
+  auth.innerHTML = "";
+  const token = localStorage.getItem("token");
+  const email = localStorage.getItem("userEmail");
+  if(token){
+    const sp = document.createElement("span"); sp.style.fontWeight="700"; sp.style.color="var(--brand)"; sp.innerText = email || "User";
+    const btn = document.createElement("button"); btn.className="btn btn-ghost"; btn.innerText="Logout"; btn.onclick = ()=>{ localStorage.removeItem("token"); localStorage.removeItem("userEmail"); toast('Logged out'); show('signin'); renderAuthArea(); };
+    auth.appendChild(sp); auth.appendChild(btn);
+  } else {
+    const a1 = document.createElement("a"); a1.className="link"; a1.innerText="Sign In"; a1.href="#"; a1.onclick = (e)=>{ e.preventDefault(); show('signin'); };
+    const a2 = document.createElement("a"); a2.className="link"; a2.innerText="Sign Up"; a2.href="#"; a2.onclick = (e)=>{ e.preventDefault(); show('signup'); };
+    auth.appendChild(a1); auth.appendChild(a2);
+  }
+}
+
+// initial view
+if(localStorage.getItem("token")) show('home'); else show('signin');
+renderAuthArea();
+
+/* ---------- Sign Up / Sign In ---------- */
+document.getElementById("gotoSignup").onclick = ()=> show('signup');
+document.getElementById("backToSignIn").onclick = ()=> show('signin');
+
+// Sign up
+document.getElementById("signupBtn").onclick = async ()=>{
+  signupMsg.innerText=""; signupMsg.style.color="#b91c1c";
+  const name = signupName.value.trim(); const email = signupEmail.value.trim(); const pw = signupPassword.value; const pw2 = signupConfirm.value;
+  if(!email || !pw){ signupMsg.innerText="Email and password required"; return; }
+  if(pw !== pw2){ signupMsg.innerText="Passwords do not match"; return; }
+  try{
+    const res = await fetch(apiBase + "/api/signup",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name, email, password: pw })});
+    const j = await res.json();
+    if(res.ok){ localStorage.setItem("token", j.token); localStorage.setItem("userEmail", j.email || email); toast("Signed up"); renderAuthArea(); show('home'); }
+    else signupMsg.innerText = j.error || "Sign up failed";
+  }catch(e){ signupMsg.innerText="Network error"; }
+};
+
+// Sign in
+document.getElementById("signinBtn").onclick = async ()=>{
+  signinMsg.innerText=""; signinMsg.style.color="#b91c1c";
+  const email = signinEmail.value.trim(); const pw = signinPassword.value;
+  if(!email || !pw){ signinMsg.innerText="Email and password required"; return; }
+  try{
+    const res = await fetch(apiBase + "/api/login",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ email, password: pw })});
+    const j = await res.json();
+    if(res.ok){ localStorage.setItem("token", j.token); localStorage.setItem("userEmail", j.email || j.email || email); toast("Signed in"); renderAuthArea(); show('home'); }
+    else signinMsg.innerText = j.error || "Sign in failed";
+  }catch(e){ signinMsg.innerText = "Network error"; }
+};
+
+/* ---------- Navigation buttons ---------- */
+document.getElementById("navUpload").onclick = ()=> { if(!localStorage.getItem("token")){ toast("Please sign in"); show('signin'); } else show('upload'); };
+document.getElementById("navSearch").onclick = ()=> { if(!localStorage.getItem("token")){ toast("Please sign in"); show('signin'); } else show('search'); };
+document.getElementById("backFromUpload").onclick = ()=> show('home');
+document.getElementById("backFromSearch").onclick = ()=> show('home');
+
+/* ---------- Upload ---------- */
+async function loadMyUploads(){
+  const ul = document.getElementById("myUploads"); ul.innerHTML="";
+  const t = localStorage.getItem("token");
+  if(!t){ ul.innerHTML = "<div class='small'>Sign in to see uploads</div>"; return; }
+  try{
+    const res = await fetch(apiBase + "/api/mydocs", { headers: { Authorization: "Bearer " + t }});
+    if(!res.ok) { ul.innerHTML = "<div class='small'>Failed to load</div>"; return; }
+    const arr = await res.json();
+    if(!arr || arr.length===0){ ul.innerHTML = "<div class='small'>No uploads</div>"; return; }
+    arr.forEach(d=>{
+      const li = document.createElement("li"); li.className="result";
+      const name = d.document_name || d.original_filename;
+      const meta = document.createElement("div");
+      meta.innerHTML = "<strong>"+escapeHtml(name)+"</strong><div class='small'>"+(d.document_type||"")+" • "+(d.document_date||"")+"</div>";
+      const actions = document.createElement("div");
+      const fname = (d.file_path||"").split(/[\\/]/).pop();
+      const url = "/uploads/" + encodeURIComponent(fname);
+      const a = document.createElement("a"); a.href = url; a.target="_blank"; a.innerText="view";
+      const del = document.createElement("button"); del.className="btn btn-ghost"; del.style.marginLeft="8px"; del.innerText="Delete";
+      del.onclick = async ()=>{ if(!confirm("Delete this document?")) return; try{ const tkn = localStorage.getItem("token"); const res = await fetch(apiBase + "/api/documents/" + d.id, { method:"DELETE", headers: { Authorization: "Bearer " + tkn } }); const j = await res.json(); if(res.ok){ toast("Deleted"); loadMyUploads(); } else alert(j.error || "Delete failed"); }catch(e){ alert("Network error"); } };
+      actions.appendChild(a); actions.appendChild(del);
+      li.appendChild(meta); li.appendChild(actions);
+      ul.appendChild(li);
+    });
+  }catch(e){ ul.innerHTML = "<div class='small'>Error</div>"; }
+}
+
+document.getElementById("uploadSubmit").onclick = async ()=>{
+  const f = document.getElementById("file_input");
+  if(!f.files.length){ toast("Select a file"); return; }
+  const form = new FormData();
+  form.append("file", f.files[0]);
+  form.append("document_name", document.getElementById("document_name").value);
+  form.append("document_type", document.getElementById("document_type").value);
+  form.append("document_date", document.getElementById("document_date").value);
+  const t = localStorage.getItem("token");
+  if(!t){ toast("Please sign in"); show('signin'); return; }
+  try{
+    const res = await fetch(apiBase + "/api/upload", { method:"POST", headers: { Authorization: "Bearer " + t }, body: form });
+    const j = await res.json();
+    if(res.ok){ document.getElementById("uploadStatus").innerText = "Uploaded ✓"; loadMyUploads(); } else { document.getElementById("uploadStatus").innerText = j.error || "Upload failed"; }
+  }catch(e){ document.getElementById("uploadStatus").innerText = "Network error"; }
+};
+
+/* ---------- Search ---------- */
+document.getElementById("searchBtn").onclick = async ()=>{
+  const q = document.getElementById("q").value;
+  const type = document.getElementById("type").value;
+  const date = document.getElementById("date").value;
+  const params = new URLSearchParams();
+  if(q) params.append("q", q);
+  if(type) params.append("type", type);
+  if(date) params.append("date", date);
+  try{
+    const res = await fetch(apiBase + "/api/search?" + params.toString());
+    const arr = await res.json();
+    const ul = document.getElementById("searchResults"); ul.innerHTML="";
+    if(!arr || arr.length===0){ ul.innerHTML = "<div class=\'small\'>No results</div>"; return; }
+    arr.forEach(d=>{
+      const li = document.createElement("li"); li.className="result";
+      const name = d.document_name || d.original_filename;
+      const meta = document.createElement("div");
+      meta.innerHTML = "<strong>"+escapeHtml(name)+"</strong><div class='small'>"+(d.document_type||"")+" • "+(d.document_date||"")+"</div>";
+      const actions = document.createElement("div");
+      const fname = (d.file_path||"").split(/[\\/]/).pop();
+      const url = "/uploads/" + encodeURIComponent(fname);
+      const a = document.createElement("a"); a.href = url; a.target="_blank"; a.innerText="view";
+      actions.appendChild(a);
+      li.appendChild(meta); li.appendChild(actions);
+      ul.appendChild(li);
+    });
+  }catch(e){ alert("Search failed"); }
+};
+
+/* ---------- helpers ---------- */
+function escapeHtml(s){ if(!s) return ""; return s.replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+// refresh uploads when entering upload view
+document.querySelectorAll("[id^='nav']").forEach(n=>n?.addEventListener('click', ()=>{}));
+document.getElementById("navUpload").addEventListener("click", ()=>{ show('upload'); loadMyUploads(); });
+document.getElementById("navSearch").addEventListener("click", ()=>{ show('search'); });
+
+window.addEventListener("DOMContentLoaded", ()=>{ if(localStorage.getItem("token")){ renderAuthArea(); } });
+
+// ensure auth area updates on changes
+setInterval(renderAuthArea, 1000);
+</script>
+</body>
+</html>
